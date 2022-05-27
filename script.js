@@ -13,6 +13,8 @@ Promise.all([
 let globalnames = []
 let globalconfidence = []
 let date = ""
+let globalexpressions = []
+let excel_dates = [new Date().toLocaleString()]
 
 async function start() {
   const container = document.createElement('div')
@@ -33,8 +35,11 @@ async function start() {
     var semester = document.getElementById("semester").value;
     
     image = await faceapi.bufferToImage(file.files[0])
+    image.style.width = '40%'
+    image.classList.add('center')
     container.append(image)
     canvas = faceapi.createCanvasFromMedia(image)
+    canvas.style = "position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; margin: auto;"
     container.append(canvas)
     const displaySize = { width: image.width, height: image.height }
     faceapi.matchDimensions(canvas, displaySize)
@@ -54,18 +59,28 @@ async function start() {
       //console.log(confidence)
       globalconfidence.push(confidence)
       drawBox.draw(canvas)
-      console.log(globalnames)
-      console.log(globalconfidence)
+      detections_array = detections
+      
+      //console.log(globalnames)
+      //console.log(globalconfidence) 
+      console.log(globalexpressions)
       let funcdate = new Date().toLocaleString();
       date = branch + " " + semester + " " + funcdate + ".xlsx";
       
     })
+    for(i=0; i<globalnames.length; i++){
+
+      let all_expressions = detections_array[i]['expressions']
+      let detected_expression = Object.keys(all_expressions).reduce(function(a, b){ return all_expressions[a] > all_expressions[b] ? a : b });
+      globalexpressions.push(detected_expression)
+    }
+    
   })
 }
 
 function loadLabeledImages() {
   //const labels = ['Black Widow', 'Captain America', 'Captain Marvel', 'Hawkeye', 'Jim Rhodes', 'Thor', 'Tony Stark']
-  const labels = ['Aman', 'Kartik', 'Mohit', 'Priya', 'Shalini']
+  const labels = ['Aman', 'Kartik', 'Mohit', 'Priya', 'Shalini','Zaid', 'Zoya']
   //const labels = ['Adam', 'Cindy', 'Heather', 'Jake', 'Lucy', 'Michael']
   return Promise.all(
     labels.map(async label => {
@@ -91,7 +106,7 @@ function loadLabeledImages() {
           for (let i=0; i<globalnames.length;i++){
             present.push("PRESENT");
           }
-          var ws_data = [globalnames,present];
+          var ws_data = [excel_dates,globalnames,globalexpressions];
           console.log(ws_data);
           var ws = XLSX.utils.aoa_to_sheet(ws_data);
           ws['!cols'] = fitToColumn(ws_data);
